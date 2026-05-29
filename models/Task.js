@@ -6,19 +6,24 @@ const taskSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
     description: {
       type: String,
     },
+
     status: {
       type: String,
-      enum: ["To Do", "In Progress", "Done"],
-      default: "To Do",
+      enum: ["todo", "inprogress", "done"],
+      default: "todo",
     },
-    assignedTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+
+    // ✅ ADD THIS — stores the image path/url from multer
+    image: {
+      type: String,
+      default: null,
     },
-    createdBy: {
+
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
@@ -26,4 +31,6 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Task", taskSchema);
+const Task = mongoose.model("Task", taskSchema);
+
+export default Task;
