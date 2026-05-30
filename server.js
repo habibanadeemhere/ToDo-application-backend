@@ -1,7 +1,7 @@
-import server from "./api/index.js";
+import app from "./api/index.js";
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

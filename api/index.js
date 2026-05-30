@@ -2,21 +2,38 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "../config/db.js";
+
 import authRoutes from "../routes/authRoutes.js";
 import taskRoutes from "../routes/taskRoutes.js";
 import adminRoutes from "../routes/adminRoutes.js";
-import http from "http";
-import { Server } from "socket.io";
 
 dotenv.config();
 connectDB();
 
 const app = express();
 
-app.use(cors({
-  origin: "*",
-  credentials: true
-}));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://to-do-application-frontend-qgvc.vercel.app"
+];
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 app.use(express.json());
 
@@ -28,19 +45,4 @@ app.get("/", (req, res) => {
   res.send("API Running...");
 });
 
-// create server
-const server = http.createServer(app);
-
-// socket
-const io = new Server(server, {
-  cors: {
-    origin: "*"
-  }
-});
-
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-});
-
-// IMPORTANT: export server for deployment
-export default server;
+export default app;
