@@ -14,7 +14,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://to-do-application-frontend-qgvc.vercel.app"
+  "https://to-do-application-frontend-bnte.vercel.app/"
 ];
 
 app.use((req, res, next) => {
