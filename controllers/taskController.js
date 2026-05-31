@@ -104,3 +104,54 @@ export const deleteTask = async (req, res) => {
   }
 
 };
+
+
+// ADD COMMENT
+export const addComment = async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text?.trim()) return res.status(400).json({ message: "Comment text required" });
+
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    task.comments.push({ user: req.user.id, text, createdAt: new Date() });
+    await task.save();
+
+    const populated = await Task.findById(task._id)
+      .populate("comments.user", "name email avatar")
+      .populate("user",          "name email avatar")
+      .populate("assignedTo",    "name email avatar");
+
+    res.json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// DELETE COMMENT
+export const deleteComment = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    const comment = task.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+    const isOwner = String(comment.user) === String(req.user.id);
+    const isAdmin = req.user.role === "admin";
+    if (!isOwner && !isAdmin) return res.status(403).json({ message: "Not authorized" });
+
+    task.comments.pull({ _id: req.params.commentId });
+    await task.save();
+
+    const populated = await Task.findById(task._id)
+      .populate("comments.user", "name email avatar")
+      .populate("user",          "name email avatar")
+      .populate("assignedTo",    "name email avatar");
+
+    res.json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
