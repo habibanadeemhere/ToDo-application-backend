@@ -30,7 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ── Serve uploaded files statically ──────────────────────────────────────────
 // e.g. https://your-backend.vercel.app/uploads/1234567890.jpg
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/uploads", express.static("uploads"));
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use("/auth",  authRoutes);
