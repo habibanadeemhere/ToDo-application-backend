@@ -1,69 +1,78 @@
 import Task from "../models/Task.js";
+import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
 
 // CREATE TASK
 export const createTask = async (req, res) => {
-
   try {
-
     const { title, description, status } = req.body;
 
-    // ✅ FIX: full URL so frontend <img src> can load it
-    const image = req.file
-      ? `${req.protocol}://${req.get("host")}/${req.file.path.replace(/\\/g, "/")}`
-      : null;
+    let imageUrl = null;
+
+    if (req.file) {
+      imageUrl = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "tasks" },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
+
+        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      });
+    }
 
     const task = await Task.create({
       title,
       description,
       status,
-      image,              // ✅ save image to DB
-      user: req.user.id,
+      image: imageUrl,
     });
 
     res.status(201).json(task);
-
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      message: error.message,
-    });
-
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-
 };
 
-// GET TASKS
 export const getTasks = async (req, res) => {
-
   try {
-
-    // ✅ populate user so frontend can show name + avatar on each card
-    const tasks = await Task.find().populate("user", "name email avatar");
+    const tasks = await Task.find()
+      .populate("user", "name email avatar")
+      .populate("assignedTo", "name email avatar");
 
     res.json(tasks);
-
   } catch (error) {
-
-    res.status(500).json({
-      message: error.message,
-    });
-
+    res.status(500).json({ message: error.message });
   }
-
 };
+
 
 // UPDATE TASK
 export const updateTask = async (req, res) => {
-
   try {
-
     const updateData = { ...req.body };
 
-    // ✅ FIX: if a new image was uploaded, include it in the update
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // delete old image if new one comes
     if (req.file) {
-      updateData.image = `${req.protocol}://${req.get("host")}/${req.file.path.replace(/\\/g, "/")}`;
+      if (task.image) {
+        const publicId = task.image.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(`tasks/${publicId}`);
+      }
+
+      const result = await cloudinary.uploader.upload(
+        `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+        { folder: "tasks" }
+      );
+
+      updateData.image = result.secure_url;
     }
 
     const updatedTask = await Task.findByIdAndUpdate(
@@ -73,38 +82,34 @@ export const updateTask = async (req, res) => {
     );
 
     res.json(updatedTask);
-
   } catch (error) {
-
-    res.status(500).json({
-      message: error.message,
-    });
-
+    res.status(500).json({ message: error.message });
   }
-
 };
 
-// DELETE TASK
-export const deleteTask = async (req, res) => {
 
+//DELETE
+export const deleteTask = async (req, res) => {
   try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // delete image from cloudinary
+    if (task.image) {
+      const publicId = task.image.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(`tasks/${publicId}`);
+    }
 
     await Task.findByIdAndDelete(req.params.id);
 
-    res.json({
-      message: "Task deleted",
-    });
-
+    res.json({ message: "Task deleted" });
   } catch (error) {
-
-    res.status(500).json({
-      message: error.message,
-    });
-
+    res.status(500).json({ message: error.message });
   }
-
 };
-
 
 // ADD COMMENT
 export const addComment = async (req, res) => {
