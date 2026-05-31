@@ -1,32 +1,42 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import connectDB from "../config/db.js";
 
-import authRoutes from "../routes/authRoutes.js";
-import taskRoutes from "../routes/taskRoutes.js";
+import authRoutes  from "../routes/authRoutes.js";
+import taskRoutes  from "../routes/taskRoutes.js";
 import adminRoutes from "../routes/adminRoutes.js";
 
 dotenv.config();
 connectDB();
 
 const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// middleware
+// ── CORS ─────────────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: "*",
+  origin: "*",        // tighten this to your Vercel frontend URL in production
   credentials: true,
 }));
 
+// ── Body parsers ──────────────────────────────────────────────────────────────
+// IMPORTANT: do NOT add express.json() before multer routes
+// multer handles multipart; express.json() handles application/json
+// Both can coexist because multer only fires when Content-Type is multipart
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// routes
-app.use("/api/auth", authRoutes);
+// ── Serve uploaded files statically ──────────────────────────────────────────
+// e.g. https://your-backend.vercel.app/uploads/1234567890.jpg
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+// ── Routes ───────────────────────────────────────────────────────────────────
+app.use("/api/auth",  authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/admin", adminRoutes);
 
-app.get("/", (req, res) => {
-  res.send("API Running...");
-});
+app.get("/", (req, res) => res.send("API Running..."));
 
 export default app;
