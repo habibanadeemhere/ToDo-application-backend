@@ -1,53 +1,60 @@
 import Task from "../models/Task.js";
 import cloudinary from "../config/cloudinary.js";
-import streamifier from "streamifier";
+
 
 // CREATE TASK
 export const createTask = async (req, res) => {
   try {
-    const { title, description, status } = req.body;
+    const { title, description, status, priority, dueDate, assignedTo } = req.body;
 
     let imageUrl = null;
 
-    if (req.file) {
-      imageUrl = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "tasks" },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result.secure_url);
-          }
-        );
+  console.log("FILE:", req.file); // 🔥 DEBUG
 
-        streamifier.createReadStream(req.file.buffer).pipe(stream);
-      });
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(
+        `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+        {
+          folder: "tasks",
+        }
+      );
+
+      imageUrl = result.secure_url;
     }
 
     const task = await Task.create({
       title,
       description,
       status,
+      priority,
+      dueDate,
+      assignedTo,
       image: imageUrl,
+      user: req.user.id,
     });
 
     res.status(201).json(task);
   } catch (err) {
+   console.log("CREATE TASK ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
+// GET TASKS
 export const getTasks = async (req, res) => {
   try {
     const tasks = await Task.find()
       .populate("user", "name email avatar")
-      .populate("assignedTo", "name email avatar");
+      .populate("assignedTo", "name email avatar")
+      .populate("comments.user", "name email avatar");
 
     res.json(tasks);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
-
 
 // UPDATE TASK
 export const updateTask = async (req, res) => {
