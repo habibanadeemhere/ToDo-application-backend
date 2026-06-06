@@ -16,9 +16,9 @@ const router = express.Router();
 // upload.single("image") is on EVERY mutating route
 // — multer is smart: if no file is sent it just sets req.file = undefined
 // — this means FormData with or without image is always parsed correctly
- router.post("/", authMiddleware, createTask);
-router.get("/",     authMiddleware, getTasks);
-router.put("/:id",  authMiddleware,  updateTask);
+router.post("/", authMiddleware, upload.single("image"), createTask);
+router.get("/", authMiddleware, getTasks);
+router.put("/:id", authMiddleware, upload.single("image"), updateTask);
 router.delete("/:id", authMiddleware, deleteTask);
 
 // Comments
