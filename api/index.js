@@ -5,11 +5,16 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "../config/db.js";
 
-import authRoutes  from "../routes/authRoutes.js";
-import taskRoutes  from "../routes/taskRoutes.js";
+import authRoutes from "../routes/authRoutes.js";
+import taskRoutes from "../routes/taskRoutes.js";
 import adminRoutes from "../routes/adminRoutes.js";
 
 dotenv.config();
+
+// ✅ CREATE APP (THIS WAS MISSING)
+const app = express();
+
+// DB connection
 let isConnected = false;
 
 const connect = async () => {
@@ -20,36 +25,26 @@ const connect = async () => {
 
 connect();
 
-
-
-
-// ── CORS ─────────────────────────────────────────────────────────────────────
+// ── CORS ─────────────────────────────
 app.use(cors({
-origin: "https://to-do-application-frontend-phi.vercel.app",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: "https://to-do-application-frontend-phi.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-   credentials: true
+  credentials: true
 }));
 
-app.options("*", cors());
+app.options(/.*/, cors());
 
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-
-// ── Body parsers ──────────────────────────────────────────────────────────────
-// IMPORTANT: do NOT add express.json() before multer routes
-// multer handles multipart; express.json() handles application/json
-// Both can coexist because multer only fires when Content-Type is multipart
+// ── Body parsers ────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Serve uploaded files statically ──────────────────────────────────────────
-// e.g. https://your-backend.vercel.app/uploads/1234567890.jpg
+// ── Static uploads ───────────────────
 app.use("/uploads", express.static("uploads"));
 
-// ── Routes ───────────────────────────────────────────────────────────────────
-app.use("/auth",  authRoutes);
+// ── Routes ───────────────────────────
+app.use("/auth", authRoutes);
 app.use("/tasks", taskRoutes);
 app.use("/admin", adminRoutes);
 
