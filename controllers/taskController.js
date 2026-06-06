@@ -1,11 +1,12 @@
 import Task from "../models/Task.js";
 import cloudinary from "../config/cloudinary.js";
 
-console.log("USER:", req.user);
-console.log("BODY:", req.body);
+
 // CREATE TASK
 export const createTask = async (req, res) => {
   try {
+    console.log("USER:", req.user);
+console.log("BODY:", req.body);
     const { title, description, status, priority, dueDate, assignedTo } = req.body;
 
     let imageUrl = null;
