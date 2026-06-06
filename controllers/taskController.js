@@ -30,7 +30,7 @@ export const createTask = async (req, res) => {
       dueDate,
       assignedTo,
       image: imageUrl,
-      user: req.user.id,
+    user: req.user.id || req.user._id,
     });
 
     res.status(201).json(task);
