@@ -20,8 +20,7 @@ const connect = async () => {
 
 connect();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
 
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
@@ -42,7 +41,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // IMPORTANT: do NOT add express.json() before multer routes
 // multer handles multipart; express.json() handles application/json
 // Both can coexist because multer only fires when Content-Type is multipart
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ── Serve uploaded files statically ──────────────────────────────────────────
 // e.g. https://your-backend.vercel.app/uploads/1234567890.jpg
