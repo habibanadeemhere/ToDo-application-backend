@@ -29,7 +29,10 @@ app.use(cors({
 origin: "https://to-do-application-frontend-phi.vercel.app",
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
+   credentials: true
 }));
+
+app.options("*", cors());
 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
