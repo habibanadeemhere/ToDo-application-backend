@@ -10,16 +10,30 @@ import taskRoutes  from "../routes/taskRoutes.js";
 import adminRoutes from "../routes/adminRoutes.js";
 
 dotenv.config();
-connectDB();
+let isConnected = false;
 
-const app = express();
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const connect = async () => {
+  if (isConnected) return;
+  await connectDB();
+  isConnected = true;
+};
+
+connect();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: "*",        // tighten this to your Vercel frontend URL in production
-  credentials: true,
+origin: "https://to-do-application-frontend-phi.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 
 // ── Body parsers ──────────────────────────────────────────────────────────────
 // IMPORTANT: do NOT add express.json() before multer routes
