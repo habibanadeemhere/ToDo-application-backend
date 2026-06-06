@@ -1,7 +1,8 @@
 import Task from "../models/Task.js";
 import cloudinary from "../config/cloudinary.js";
 
-
+console.log("USER:", req.user);
+console.log("BODY:", req.body);
 // CREATE TASK
 export const createTask = async (req, res) => {
   try {
@@ -30,12 +31,13 @@ export const createTask = async (req, res) => {
       dueDate,
       assignedTo,
       image: imageUrl,
-    user: req.user.id || req.user._id,
+    user: req.user?.id || req.user?._id,
     });
 
     res.status(201).json(task);
   } catch (err) {
-   console.log("CREATE TASK ERROR:", err);
+     console.log("CREATE TASK ERROR FULL:", err);
+  console.log("STACK:", err.stack);
     res.status(500).json({ message: err.message });
   }
 };
